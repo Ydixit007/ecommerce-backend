@@ -11,20 +11,19 @@ export const createNewUserController = TryCatch(
     next: NextFunction
   ) => {
     const { name, photo, email, gender, _id, dob } = req.body;
-    
+
     let user = await User.findById(_id);
 
-    if(user){
+    if (user) {
       return res.status(200).json({
         success: true,
-        message: `welcome, ${user.name}`,
+        message: `welcome back, ${user.name}`,
       });
     }
 
-    if(!_id || !name || !photo || !email || !gender || !dob){
+    if (!_id || !name || !photo || !email || !gender || !dob) {
       return next(new ErrorHandler("Please add all fields", 400));
-    } 
-
+    }
 
     user = await User.create({
       name,
@@ -39,5 +38,32 @@ export const createNewUserController = TryCatch(
       success: true,
       message: `welcome, ${user.name}`,
     });
+  }
+);
+
+export const getAllUsers = TryCatch(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const users = await User.find();
+
+    return res.status(200).json({
+      success: true,
+      users,
+    })
+  }
+);
+
+export const getUser = TryCatch(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const id = req.params.id;
+    const user = await User.findById(id);
+
+    if(!user){
+      return next(new ErrorHandler("Can't find the user", 400))
+    }
+
+    return res.status(200).json({
+      success: true,
+      user,
+    })
   }
 );

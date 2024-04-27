@@ -7,7 +7,7 @@ export const createNewUserController = TryCatch(async (req, res, next) => {
     if (user) {
         return res.status(200).json({
             success: true,
-            message: `welcome, ${user.name}`,
+            message: `welcome back, ${user.name}`,
         });
     }
     if (!_id || !name || !photo || !email || !gender || !dob) {
@@ -24,5 +24,23 @@ export const createNewUserController = TryCatch(async (req, res, next) => {
     return res.status(201).json({
         success: true,
         message: `welcome, ${user.name}`,
+    });
+});
+export const getAllUsers = TryCatch(async (req, res, next) => {
+    const users = await User.find();
+    return res.status(200).json({
+        success: true,
+        users,
+    });
+});
+export const getUser = TryCatch(async (req, res, next) => {
+    const id = req.params.id;
+    const user = await User.findById(id);
+    if (!user) {
+        return next(new ErrorHandler("Can't find the user", 400));
+    }
+    return res.status(200).json({
+        success: true,
+        user,
     });
 });
