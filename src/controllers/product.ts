@@ -1,6 +1,10 @@
 import { NextFunction, Request, Response } from "express";
 import { TryCatch } from "../middlewares/error.js";
-import { createProductRequestBody } from "../types/types.js";
+import {
+  BaseQuery,
+  createProductRequestBody,
+  SearchRequestQuery,
+} from "../types/types.js";
 import { Product } from "../models/product.js";
 import { ErrorHandler } from "../utils/utility-class.js";
 import { rm } from "fs";
@@ -128,15 +132,15 @@ export const updateProduct = TryCatch(async (req, res, next) => {
 
 // Controller for deleting product
 export const deleteProduct = TryCatch(async (req, res, next) => {
-  const {id} = req.params;
+  const { id } = req.params;
   // checking if id is present in req.
-  if(!id) return next(new ErrorHandler("Invalid id", 404));
-  
+  if (!id) return next(new ErrorHandler("Invalid id", 404));
+
   const product = await Product.findById(id);
   // checking if product actually exists.
-  if(!product) return next(new ErrorHandler("product not found", 404));
+  if (!product) return next(new ErrorHandler("product not found", 404));
 
-  rm(product.productImage, ()=>{
+  rm(product.productImage, () => {
     console.log("Product image deleted!");
   });
 
@@ -145,6 +149,52 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
 
   return res.status(200).json({
     success: true,
-    message: "The product has been deleted successfully!"
+    message: "The product has been deleted successfully!",
   });
 });
+
+// get all products with filters
+export const getAllProductsWithFilters = TryCatch(
+  async (req: Request<{}, {}, {}, SearchRequestQuery>, res, next) => {
+    const { search, sort, category, price } = req.query;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(process.env.PRODUCT_PER_PAGE) || 10;
+    const skip = (page - 1) * limit;
+
+    const baseQuery: BaseQuery = {};
+
+    // if searching by search query
+    if (search)
+      baseQuery.productName = {
+        $regex: search,
+        $options: "i",
+      };
+    // if searching by price
+    if (price)
+      baseQuery.price = {
+        $lte: Number(price),
+      };
+    // if searching by category
+    if (category) baseQuery.category = category;
+
+    // applying filters and sorting and pagination, running both awaits together using Promise.all()
+    // products has porducts with filters and sorting
+    // allProducts will be used for calculating the length for pagination based on filters
+    const [products, allProducts] = await Promise.all([
+      Product.find(baseQuery)
+      .sort(sort && { price: sort === "asc" ? 1 : -1 })
+      .limit(limit)
+      .skip(skip),
+      Product.find(baseQuery)
+    ])
+
+    // get the total number of pages in applied products.
+    const totalPages = Math.ceil(allProducts.length / limit);
+
+    return res.status(200).json({
+      success: true,
+      products,
+      totalPages,
+    });
+  }
+);
