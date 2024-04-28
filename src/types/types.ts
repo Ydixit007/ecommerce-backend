@@ -10,6 +10,15 @@ export interface createUserRequestBody {
   dob: Date;
 }
 
+export interface createProductRequestBody {
+  productName: string;
+  price: number;
+  discount?: number;
+  sizes: string;
+  stock: string;
+  category: string;
+}
+
 export type ControllerType = (
   req: Request,
   res: Response,
