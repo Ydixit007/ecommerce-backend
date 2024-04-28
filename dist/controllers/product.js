@@ -2,6 +2,7 @@ import { TryCatch } from "../middlewares/error.js";
 import { Product } from "../models/product.js";
 import { ErrorHandler } from "../utils/utility-class.js";
 import { rm } from "fs";
+import { nodeCache } from "../app.js";
 // Controller for creating new product
 export const createNewProduct = TryCatch(async (req, res, next) => {
     const { productName, price, discount, sizes, stock, category } = req.body;
@@ -31,9 +32,19 @@ export const createNewProduct = TryCatch(async (req, res, next) => {
         message: "product created successfully",
     });
 });
+// revalidate cache on new order and on new product creation
 // Controller for latest products
 export const getLatestProducts = TryCatch(async (req, res, next) => {
-    const products = await Product.find({}).sort().limit(5);
+    let products = [];
+    // checking if cache already has the data.
+    if (nodeCache.has("latest-products"))
+        // getting the data from cache.
+        products = JSON.parse(nodeCache.get("latest-products"));
+    else {
+        products = await Product.find({}).sort().limit(5);
+        // storing data in cache for future
+        nodeCache.set("latest-products", JSON.stringify(products));
+    }
     return res.status(200).json({
         success: true,
         products,
@@ -157,7 +168,7 @@ export const getAllProductsWithFilters = TryCatch(async (req, res, next) => {
             .sort(sort && { price: sort === "asc" ? 1 : -1 })
             .limit(limit)
             .skip(skip),
-        Product.find(baseQuery)
+        Product.find(baseQuery),
     ]);
     // get the total number of pages in applied products.
     const totalPages = Math.ceil(allProducts.length / limit);
