@@ -1,5 +1,6 @@
 import express from "express";
-import { createNewUserController, getAllUsers, getUser } from "../controllers/user.js";
+import { createNewUserController, deleteUser, getAllUsers, getUser } from "../controllers/user.js";
+import { adminOnly } from "../middlewares/auth.js";
 
 const userRoute = express.Router();
 
@@ -7,10 +8,13 @@ const userRoute = express.Router();
 userRoute.post("/create", createNewUserController);
 
 // route : /api/v1/user/all
-userRoute.get("/all", getAllUsers);
+userRoute.get("/all", adminOnly, getAllUsers);
 
 // route : /api/v1/user/:id (dynamic Id)
-userRoute.get("/:id", getUser);
+userRoute.get("/:id",adminOnly, getUser);
+
+// route: api/vi/user/delete
+userRoute.delete("/:id",adminOnly, deleteUser);
 
 
 export default userRoute;

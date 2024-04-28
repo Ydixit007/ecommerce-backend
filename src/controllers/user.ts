@@ -67,3 +67,19 @@ export const getUser = TryCatch(
     })
   }
 );
+
+export const deleteUser = TryCatch(async (req: Request, res: Response, next: NextFunction)=>{
+  const id = req.params.id;
+  const user = await User.findById(id);
+
+  if(!user){
+    return next(new ErrorHandler("Can't find the user", 400))
+  }
+
+  await user.deleteOne();
+
+  return res.status(200).json({
+    success: true,
+    message: "user account delete successfully!",
+  })
+})
