@@ -3,6 +3,7 @@ import { Product } from "../models/product.js";
 import { ErrorHandler } from "../utils/utility-class.js";
 import { rm } from "fs";
 import { nodeCache } from "../app.js";
+import { invalidateCache } from "../utils/features.js";
 // Controller for creating new product
 export const createNewProduct = TryCatch(async (req, res, next) => {
     const { productName, price, discount, sizes, stock, category } = req.body;
@@ -27,6 +28,8 @@ export const createNewProduct = TryCatch(async (req, res, next) => {
         discount,
         category: category.toLowerCase(),
     });
+    // invalidate previous cache
+    await invalidateCache({ product: true });
     return res.status(201).json({
         success: true,
         message: "product created successfully",
@@ -50,9 +53,15 @@ export const getLatestProducts = TryCatch(async (req, res, next) => {
         products,
     });
 });
-// get all products for admin
+// get all products for admin with caching
 export const getAllProducts = TryCatch(async (req, res, next) => {
-    const products = await Product.find({});
+    let products;
+    if (nodeCache.has("admin-products"))
+        products = JSON.parse(nodeCache.get("admin-products"));
+    else {
+        products = await Product.find({});
+        nodeCache.set("admin-products", products);
+    }
     return res.status(200).json({
         success: true,
         products,
@@ -60,7 +69,15 @@ export const getAllProducts = TryCatch(async (req, res, next) => {
 });
 // get single product from id.
 export const getSingleProduct = TryCatch(async (req, res, next) => {
-    const product = await Product.findById(req.params.id);
+    let product;
+    const id = req.params.id;
+    if (nodeCache.has(`product-${id}`))
+        product = nodeCache.get(`product-${id}`);
+    else {
+        product = await Product.findById(id);
+        // caching based on unique id of the product.
+        nodeCache.set(`product-${id}`, product);
+    }
     if (!product)
         return next(new ErrorHandler("product not found", 400));
     return res.status(200).json({
@@ -68,14 +85,20 @@ export const getSingleProduct = TryCatch(async (req, res, next) => {
         product,
     });
 });
-// Controller for getting product categories
+// Controller for getting product categories with caching
 export const getProductCategories = TryCatch(async (req, res, next) => {
-    const category = [
-        {
-            men: ["shirts", "tshirts", "jeans", "trousers", "shoes"],
-            women: ["dresses", "tshirts", "skirts", "jeans", "heels"],
-        },
-    ];
+    let category;
+    if (nodeCache.has("category"))
+        category = JSON.parse(nodeCache.get("category"));
+    else {
+        category = [
+            {
+                men: ["shirts", "tshirts", "jeans", "trousers", "shoes"],
+                women: ["dresses", "tshirts", "skirts", "jeans", "heels"],
+            },
+        ];
+        nodeCache.set("category", category);
+    }
     // const category = await Product.distinct("category");
     return res.status(200).json({
         success: true,
@@ -114,6 +137,8 @@ export const updateProduct = TryCatch(async (req, res, next) => {
         product.category = category.toLowerCase();
     // saving the updated changes.
     await product.save();
+    // invalidate previous cache
+    await invalidateCache({ product: true });
     return res.status(200).json({
         success: true,
         message: "product updated successfully",
@@ -134,6 +159,8 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
     });
     // deleting product from database.
     await product.deleteOne();
+    // invalidate previous cache
+    await invalidateCache({ product: true });
     return res.status(200).json({
         success: true,
         message: "The product has been deleted successfully!",
