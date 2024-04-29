@@ -1,11 +1,12 @@
 import mongoose from "mongoose";
-import { InvalidateCacheType } from "../types/types.js";
+import { InvalidateCacheType, OrderItemType } from "../types/types.js";
 import { Product } from "../models/product.js";
 import { nodeCache } from "../app.js";
+import { ErrorHandler } from "./utility-class.js";
 
-export const connectDB = async () => {
+export const connectDB = async (uri: string) => {
   try {
-    const db = await mongoose.connect("mongodb://0.0.0.0:27017", {
+    const db = await mongoose.connect(uri, {
       dbName: "aura-ecommerce",
     });
     console.log(`database has been connected! : ${db.connection.host}`);
@@ -20,11 +21,15 @@ export const invalidateCache = async ({
   order,
 }: InvalidateCacheType) => {
   if (product) {
-    const productKeys: string[] = ["latest-products", "category", "admin-products"];
+    const productKeys: string[] = [
+      "latest-products",
+      "category",
+      "admin-products",
+    ];
     // get product ids
     const products = await Product.find({}).select("_id");
-    products.forEach(product => {
-        productKeys.push(`product-${product._id}`);
+    products.forEach((product) => {
+      productKeys.push(`product-${product._id}`);
     });
     nodeCache.del(productKeys);
   }
@@ -32,4 +37,12 @@ export const invalidateCache = async ({
   }
   if (admin) {
   }
+};
+
+export const reduceItems = (orderItems: OrderItemType[]) => {
+  orderItems.forEach(async (order) => {
+    const product = await Product.findById(order.productId);
+    if(!product) throw new ErrorHandler("product not found", 404);
+    
+  });
 };

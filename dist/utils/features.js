@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
 import { Product } from "../models/product.js";
 import { nodeCache } from "../app.js";
-export const connectDB = async () => {
+import { ErrorHandler } from "./utility-class.js";
+export const connectDB = async (uri) => {
     try {
-        const db = await mongoose.connect("mongodb://0.0.0.0:27017", {
+        const db = await mongoose.connect(uri, {
             dbName: "aura-ecommerce",
         });
         console.log(`database has been connected! : ${db.connection.host}`);
@@ -14,10 +15,14 @@ export const connectDB = async () => {
 };
 export const invalidateCache = async ({ product, admin, order, }) => {
     if (product) {
-        const productKeys = ["latest-products", "category", "admin-products"];
+        const productKeys = [
+            "latest-products",
+            "category",
+            "admin-products",
+        ];
         // get product ids
         const products = await Product.find({}).select("_id");
-        products.forEach(product => {
+        products.forEach((product) => {
             productKeys.push(`product-${product._id}`);
         });
         nodeCache.del(productKeys);
@@ -26,4 +31,11 @@ export const invalidateCache = async ({ product, admin, order, }) => {
     }
     if (admin) {
     }
+};
+export const reduceItems = (orderItems) => {
+    orderItems.forEach(async (order) => {
+        const product = await Product.findById(order.productId);
+        if (!product)
+            throw new ErrorHandler("product not found", 404);
+    });
 };

@@ -4,24 +4,36 @@ import { connectDB } from "./utils/features.js";
 import { errorHandlerMiddleware } from "./middlewares/error.js";
 import productRoute from "./routes/product.js";
 import NodeCache from "node-cache";
+import orderRoute from "./routes/orders.js";
+import {config} from "dotenv";
+import morgan from "morgan";
+
+// config for env
+config({
+  path: "./.env"
+})
+
 // init
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
+const mongoDbURI = process.env.MONGODB_URI || ""
 app.use(express.json());
-connectDB();
+// logs the information about requests happening to console for logs.
+app.use(morgan("dev"));
+connectDB(mongoDbURI);
 
 // creating a instance of node cache (This will store data in cache memory for better response times).
 export const nodeCache = new NodeCache();
 
 // routes
+app.use("/api/v1/user", userRoute);
+app.use("/api/v1/product", productRoute);
+app.use("/api/v1/order", orderRoute);
+app.use("/uploads", express.static("uploads"));
 app.get("/", (req, res) => {
   res.send("Api working!");
 });
 
-app.use("/api/v1/user", userRoute);
-app.use("/api/v1/product", productRoute);
-
-app.use("/uploads", express.static("uploads"));
 // error handeling
 app.use(errorHandlerMiddleware);
 app.listen(port, () => {

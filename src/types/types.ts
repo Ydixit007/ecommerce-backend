@@ -49,3 +49,33 @@ export type InvalidateCacheType = {
   order?: boolean,
   admin?: boolean
 }
+
+export type OrderItemType = {
+  productName: string,
+  productImage: string,
+  price: number,
+  quantity: number,
+  productId: string,
+  size: string,
+  discount?: number
+}
+
+export type ShippingInfoType = {
+  address: string,
+  city: string,
+  state: string,
+  country: string,
+  pincode: number,
+}
+
+export interface createOrderRequestBody{
+  shippingInfo: ShippingInfoType,
+  user: string,
+  trackingLink?: string,
+  subtotal: number,
+  tax: number,
+  shippingCharges: number,
+  discount?: number,
+  total: number,
+  orderItems: OrderItemType[],
+}
