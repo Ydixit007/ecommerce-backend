@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from "express";
 import { TryCatch } from "../middlewares/error.js";
 import { createOrderRequestBody } from "../types/types.js";
 import { Order } from "../models/order.js";
+import { invalidateCache, reduceItems } from "../utils/features.js";
+import { ErrorHandler } from "../utils/utility-class.js";
 
 export const createNewOrder = TryCatch(
   async (
@@ -21,6 +23,21 @@ export const createNewOrder = TryCatch(
       discount,
     } = req.body;
 
+    if (
+      !shippingInfo ||
+      !orderItems ||
+      !user ||
+      !subtotal ||
+      !tax ||
+      !shippingCharges ||
+      !total ||
+      !trackingLink ||
+      !discount
+    ) {
+      return next(
+        new ErrorHandler("Please fill all the fields to process order", 400)
+      );
+    }
     await Order.create({
       shippingInfo,
       orderItems,
@@ -33,9 +50,14 @@ export const createNewOrder = TryCatch(
       discount,
     });
 
-    res.send(201).json({
-        success: true,
-        message: "Your order has been successfully place!",
-    })
+    // recalculate stock items
+    reduceItems(orderItems);
+    // invalidate prev cache
+    await invalidateCache({ product: true, order: true, admin: true });
+
+    return res.status(201).json({
+      success: true,
+      message: "The order has been placed successfully!",
+    });
   }
 );

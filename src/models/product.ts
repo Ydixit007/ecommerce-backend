@@ -18,11 +18,11 @@ const schema = new mongoose.Schema(
       type: Number,
     },
     sizes: {
-      type: Array<String>,
+      type: [String],
       required: [true, "please enter price"],
     },
     stock: {
-      type: Array<Number>,
+      type: [Number],
       required: [true, "please enter stock for each size"],
     },
     category: {

@@ -8,6 +8,7 @@ import { invalidateCache } from "../utils/features.js";
 export const createNewProduct = TryCatch(async (req, res, next) => {
     const { productName, price, discount, sizes, stock, category } = req.body;
     const productImage = req.file;
+    console.log(req.body);
     // standard checks for null safety.
     if (!productImage)
         return next(new ErrorHandler("Add product image", 400));

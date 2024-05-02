@@ -29,7 +29,7 @@ const schema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    subTotal: {
+    subtotal: {
       type: Number,
       required: [true, "invalid subtotal"],
     },

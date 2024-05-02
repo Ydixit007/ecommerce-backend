@@ -37,5 +37,11 @@ export const reduceItems = (orderItems) => {
         const product = await Product.findById(order.productId);
         if (!product)
             throw new ErrorHandler("product not found", 404);
+        product.sizes.forEach((size, index) => {
+            if (size.toLowerCase() === order.size.toLowerCase()) {
+                product.stock[index] -= 1;
+            }
+        });
+        await product.save();
     });
 };
