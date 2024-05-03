@@ -22,6 +22,7 @@ export const invalidateCache = async ({
   order,
   userId,
   orderId,
+  productId,
 }: InvalidateCacheType) => {
   if (product) {
     const productKeys: string[] = [
@@ -29,20 +30,21 @@ export const invalidateCache = async ({
       "category",
       "admin-products",
     ];
-    // get product ids
-    const products = await Product.find({}).select("_id");
-    products.forEach((product) => {
-      productKeys.push(`product-${product._id}`);
-    });
+    if (typeof productId === "string") {
+      productKeys.push(`product-${productId}`);
+    }
+    if (typeof productId === "object") {
+      productId.forEach((i) => productKeys.push(`product-${i}`));
+    }
     nodeCache.del(productKeys);
   }
   if (order) {
     const orderKeys: string[] = [
       "admin-orders",
       `orders-${userId}`,
-      `singleOrder-${orderId}`
-    ]
-    
+      `singleOrder-${orderId}`,
+    ];
+
     nodeCache.del(orderKeys);
   }
   if (admin) {
@@ -52,12 +54,12 @@ export const invalidateCache = async ({
 export const reduceItems = (orderItems: OrderItemType[]) => {
   orderItems.forEach(async (order) => {
     const product = await Product.findById(order.productId);
-    if(!product) throw new ErrorHandler("product not found", 404);
-    product.sizes.forEach((size, index)=>{
-      if(size.toLowerCase() === order.size.toLowerCase()){
+    if (!product) throw new ErrorHandler("product not found", 404);
+    product.sizes.forEach((size, index) => {
+      if (size.toLowerCase() === order.size.toLowerCase()) {
         product.stock[index] -= 1;
       }
-    })
+    });
     await product.save();
   });
 };
