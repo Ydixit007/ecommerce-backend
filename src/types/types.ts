@@ -47,7 +47,9 @@ export interface BaseQuery {
 export type InvalidateCacheType = {
   product?: boolean,
   order?: boolean,
-  admin?: boolean
+  admin?: boolean,
+  userId?: string,
+  orderId?: string,
 }
 
 export type OrderItemType = {

@@ -3,6 +3,7 @@ import { InvalidateCacheType, OrderItemType } from "../types/types.js";
 import { Product } from "../models/product.js";
 import { nodeCache } from "../app.js";
 import { ErrorHandler } from "./utility-class.js";
+import { Order } from "../models/order.js";
 
 export const connectDB = async (uri: string) => {
   try {
@@ -19,6 +20,8 @@ export const invalidateCache = async ({
   product,
   admin,
   order,
+  userId,
+  orderId,
 }: InvalidateCacheType) => {
   if (product) {
     const productKeys: string[] = [
@@ -34,6 +37,13 @@ export const invalidateCache = async ({
     nodeCache.del(productKeys);
   }
   if (order) {
+    const orderKeys: string[] = [
+      "admin-orders",
+      `orders-${userId}`,
+      `singleOrder-${orderId}`
+    ]
+    
+    nodeCache.del(orderKeys);
   }
   if (admin) {
   }

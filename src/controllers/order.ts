@@ -54,7 +54,12 @@ export const createNewOrder = TryCatch(
     // recalculate stock items
     reduceItems(orderItems);
     // invalidate prev cache
-    await invalidateCache({ product: true, order: true, admin: true });
+    await invalidateCache({
+      product: true,
+      order: true,
+      admin: true,
+      userId: user,
+    });
 
     return res.status(201).json({
       success: true,
@@ -62,6 +67,78 @@ export const createNewOrder = TryCatch(
     });
   }
 );
+
+// process orders
+export const processOrder = TryCatch(async (req, res, next) => {
+  const { id } = req.params;
+
+  const order = await Order.findById(id);
+
+  if (!order) return next(new ErrorHandler("Order not found", 404));
+
+  switch (order.status) {
+    case "Received":
+      order.status = "Processing";
+      break;
+
+    case "Processing":
+      order.status = "Shipped";
+      break;
+
+    case "Shipped":
+      order.status = "In-transit";
+      break;
+
+    case "In-transit":
+      order.status = "Delivered";
+      break;
+
+    default:
+      order.status = "Delivered";
+
+      break;
+  }
+
+  await order.save();
+
+  // invalidate prev cache
+  await invalidateCache({
+    product: false,
+    order: true,
+    admin: true,
+    userId: order.user,
+    orderId: order.id,
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Order status updated",
+  });
+});
+
+// delete order
+export const deleteOrder = TryCatch(async (req, res, next) => {
+  const { id } = req.params;
+
+  const order = await Order.findById(id);
+  if (!order) return next(new ErrorHandler("Order not found", 404));
+
+  await order.deleteOne();
+
+  // invalidate prev cache
+  await invalidateCache({
+    product: false,
+    order: true,
+    admin: true,
+    userId: order.user,
+    orderId: order.id,
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Order delete",
+  });
+});
 
 // create all orders in admin
 export const getAllOrdersAdmin = TryCatch(async (req, res, next) => {
@@ -80,7 +157,7 @@ export const getAllOrdersAdmin = TryCatch(async (req, res, next) => {
   });
 });
 
-// create all orders in user
+// get all orders in user
 export const getAllOrders = TryCatch(async (req, res, next) => {
   const { id: user } = req.query;
 
@@ -105,11 +182,16 @@ export const getSingleOrder = TryCatch(async (req, res, next) => {
   const { id } = req.params;
   // creating key for unique user orders
   const key = `singleOrder-${id}`;
-  let order = [];
+  let order;
   // checking for existing cache
   if (nodeCache.has(key)) order = JSON.parse(nodeCache.get(key) as string);
   else {
-    order.push(await Order.findById(id).populate("user", ["name", "email", "photo"]));
+    order = await Order.findById(id).populate("user", [
+      "name",
+      "email",
+      "photo",
+    ]);
+    if (!order) return next(new ErrorHandler("Order not found", 404));
     nodeCache.set(key, JSON.stringify(order));
   }
 

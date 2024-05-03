@@ -13,7 +13,7 @@ export const connectDB = async (uri) => {
         console.log(error);
     }
 };
-export const invalidateCache = async ({ product, admin, order, }) => {
+export const invalidateCache = async ({ product, admin, order, userId, orderId, }) => {
     if (product) {
         const productKeys = [
             "latest-products",
@@ -28,6 +28,12 @@ export const invalidateCache = async ({ product, admin, order, }) => {
         nodeCache.del(productKeys);
     }
     if (order) {
+        const orderKeys = [
+            "admin-orders",
+            `orders-${userId}`,
+            `singleOrder-${orderId}`
+        ];
+        nodeCache.del(orderKeys);
     }
     if (admin) {
     }
