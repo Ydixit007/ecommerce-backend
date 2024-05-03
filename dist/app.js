@@ -7,6 +7,7 @@ import NodeCache from "node-cache";
 import orderRoute from "./routes/orders.js";
 import { config } from "dotenv";
 import morgan from "morgan";
+import paymentRoute from "./routes/payment.js";
 // config for env
 config({
     path: "./.env"
@@ -25,6 +26,7 @@ export const nodeCache = new NodeCache();
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/product", productRoute);
 app.use("/api/v1/order", orderRoute);
+app.use("/api/v1/payment", paymentRoute);
 app.use("/uploads", express.static("uploads"));
 app.get("/", (req, res) => {
     res.send("Api working!");
