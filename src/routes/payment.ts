@@ -1,8 +1,13 @@
 import express from "express";
-import { createNewCoupon } from "../controllers/payment.js";
+import { applyCoupon, createNewCoupon } from "../controllers/payment.js";
 
 const paymentRoute = express.Router();
 
+// route: /payment/coupon/create
 paymentRoute.post("/coupon/create", createNewCoupon);
+
+// route: /payment/coupon/apply
+paymentRoute.get("/coupon/apply", applyCoupon);
+
 
 export default paymentRoute
