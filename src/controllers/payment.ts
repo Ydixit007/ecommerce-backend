@@ -25,3 +25,29 @@ export const applyCoupon = TryCatch(async (req, res, next) => {
     discount,
   });
 });
+
+export const getAllCoupon = TryCatch(async (req, res, next) => {
+  const coupons = await Coupon.find({});
+
+  if (!coupons) return next(new ErrorHandler("no coupons found", 400));
+
+  return res.status(200).json({
+    success: true,
+    coupons,
+  });
+});
+
+export const deleteCoupon = TryCatch(async (req, res, next) => {
+  const {id} = req.params;
+
+  const coupon = await Coupon.findById(id);
+  if (!coupon) return next(new ErrorHandler("no coupons found", 400));
+
+  await coupon.deleteOne();
+
+  return res.status(200).json({
+    success: true,
+    message: "coupon successfully deleted!"
+  });
+});
+
