@@ -24,7 +24,7 @@ const schema = new mongoose.Schema(
     },
     dob: {
         type: Date,
-        required: [true, "Please enter photo."],
+        required: [true, "Please enter date of birth."],
     },
 }, {
     timestamps: true,

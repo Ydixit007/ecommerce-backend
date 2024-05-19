@@ -44,7 +44,6 @@ export const createNewUserController = TryCatch(
 export const getAllUsers = TryCatch(
   async (req: Request, res: Response, next: NextFunction) => {
     const users = await User.find();
-
     return res.status(200).json({
       success: true,
       users,

@@ -8,6 +8,7 @@ import orderRoute from "./routes/orders.js";
 import { config } from "dotenv";
 import morgan from "morgan";
 import paymentRoute from "./routes/payment.js";
+import cors from "cors";
 // config for env
 config({
     path: "./.env"
@@ -19,6 +20,7 @@ const mongoDbURI = process.env.MONGODB_URI || "";
 app.use(express.json());
 // logs the information about requests happening to console for logs.
 app.use(morgan("dev"));
+app.use(cors());
 connectDB(mongoDbURI);
 // creating a instance of node cache (This will store data in cache memory for better response times).
 export const nodeCache = new NodeCache();

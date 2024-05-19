@@ -4,7 +4,7 @@ import { uploadSingleImage } from "../middlewares/multer.js";
 import { createNewProduct, deleteProduct, getAllProducts, getAllProductsWithFilters, getLatestProducts, getProductCategories, updateProduct } from "../controllers/product.js";
 
 const productRoute = express.Router();
-2
+
 // route : /api/v1/product/create
 productRoute.post("/create",adminOnly, uploadSingleImage, createNewProduct);
 

@@ -11,7 +11,7 @@ userRoute.post("/create", createNewUserController);
 userRoute.get("/all", adminOnly, getAllUsers);
 
 // route : /api/v1/user/:id (dynamic Id)
-userRoute.get("/:id",adminOnly, getUser);
+userRoute.get("/:id", getUser);
 
 // route: api/vi/user/delete
 userRoute.delete("/:id",adminOnly, deleteUser);
